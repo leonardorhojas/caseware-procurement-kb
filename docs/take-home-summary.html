@@ -174,6 +174,8 @@ python scripts/ingest.py
 
   <section>
     <h2>3. Arquitectura implementada</h2>
+    <p>La soluci&oacute;n se divide en dos fases desacopladas: <strong>ingest offline</strong> (preparar datos) y <strong>runtime MCP</strong> (consultar el &iacute;ndice ya construido). El MCP nunca parsea PDFs en tiempo de ejecuci&oacute;n.</p>
+
     <div class="flow">
       <span class="flow-box">data/ PDFs + JPGs</span>
       <span class="flow-arrow">&rarr;</span>
@@ -196,25 +198,113 @@ python scripts/ingest.py
       <span class="flow-arrow">&rarr;</span>
       <span class="flow-box">Cursor / agente AI</span>
     </div>
-    <div class="grid-2" style="margin-top:1rem;">
+
+    <h3>C&oacute;mo se construy&oacute; el pipeline (ingest)</h3>
+    <table>
+      <thead>
+        <tr><th>Paso</th><th>M&oacute;dulo</th><th>Qu&eacute; hace</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1. Descubrimiento</td>
+          <td><code>extract.py</code></td>
+          <td>Escanea <code>data/</code> recursivamente. Clasifica por carpeta (<code>invoices</code>, <code>purchase_orders</code>, etc.) y extrae <code>order_id</code> del filename o del texto ("Order ID: 10687").</td>
+        </tr>
+        <tr>
+          <td>2. Extracci&oacute;n</td>
+          <td><code>extract.py</code></td>
+          <td><strong>PDFs:</strong> PyMuPDF (<code>fitz</code>) - texto nativo por p&aacute;gina.<br><strong>Im&aacute;genes JPG:</strong> Tesseract OCR v&iacute;a <code>pytesseract</code> + Pillow (requiere Tesseract instalado en el SO).</td>
+        </tr>
+        <tr>
+          <td>3. Chunking</td>
+          <td><code>chunk.py</code></td>
+          <td>Fragmenta texto en bloques de ~900 caracteres con overlap de 100. Preserva n&uacute;mero de p&aacute;gina para citas (<code>page</code>, <code>chunk_id</code>).</td>
+        </tr>
+        <tr>
+          <td>4. Embeddings</td>
+          <td><code>embed.py</code></td>
+          <td>Genera vectores con OpenAI <code>text-embedding-3-small</code>. Si hay error de quota, fallback autom&aacute;tico a <code>sentence-transformers</code> (<code>all-MiniLM-L6-v2</code>, 384 dimensiones). Vectores normalizados (L2).</td>
+        </tr>
+        <tr>
+          <td>5. Persistencia</td>
+          <td><code>store.py</code></td>
+          <td>Guarda metadata y texto de chunks en SQLite; embeddings en un array NumPy (<code>vectors.npy</code>). Manifest JSON registra chunk IDs y proveedor de embeddings.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Base de datos vectorial: qu&eacute; se us&oacute; (y qu&eacute; no)</h3>
+    <p><strong>No se us&oacute; una base vectorial dedicada</strong> (Chroma, Pinecone, Weaviate, Qdrant, etc.). Por dise&ntilde;o, para ~300 chunks el dataset es lo suficientemente peque&ntilde;o como para un enfoque m&aacute;s simple:</p>
+    <table>
+      <thead>
+        <tr><th>Componente</th><th>Tecnolog&iacute;a</th><th>Rol</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Almacenamiento vectorial</td>
+          <td><strong>NumPy</strong> (<code>artifacts/vectors.npy</code>)</td>
+          <td>Matriz float32 [N_chunks x N_dims]. B&uacute;squeda por producto punto (cosine similarity) en memoria.</td>
+        </tr>
+        <tr>
+          <td>Metadata + texto</td>
+          <td><strong>SQLite</strong> (<code>artifacts/kb.sqlite</code>)</td>
+          <td>Tablas <code>documents</code> y <code>chunks</code>: doc_type, order_id, period, file_path, page, texto del chunk, <code>embedding_index</code> (fila en el .npy).</td>
+        </tr>
+        <tr>
+          <td>Runtime</td>
+          <td>Carga en RAM</td>
+          <td><code>KnowledgeBase.load()</code> lee SQLite + <code>np.load(vectors.npy)</code> al arrancar el MCP. ~293 vectores caben en memoria sin problema.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="muted">Ventaja: cero dependencias de infra vectorial, reproducible con <code>python scripts/ingest.py</code>. Tradeoff: no escala a millones de chunks sin migrar a una vector DB o FTS5/BM25.</p>
+
+    <h3>T&eacute;cnicas y patrones usados</h3>
+    <div class="grid-2">
       <div>
-        <h3>Stack</h3>
         <ul>
-          <li>Python 3.11, PyMuPDF, pytesseract</li>
-          <li>Embeddings: OpenAI (fallback local MiniLM)</li>
-          <li>SQLite + numpy (vectores en memoria al cargar)</li>
-          <li>MCP SDK (FastMCP, stdio)</li>
+          <li><strong>RAG offline:</strong> ingest una vez, consultas muchas veces.</li>
+          <li><strong>Extracci&oacute;n estructurada en ingest:</strong> order_id, doc_type, period parseados antes de indexar.</li>
+          <li><strong>Chunking con overlap:</strong> evita cortar contexto entre p&aacute;ginas o l&iacute;neas de producto.</li>
+          <li><strong>Embeddings normalizados:</strong> cosine similarity = dot product sobre vectores unitarios.</li>
         </ul>
       </div>
       <div>
-        <h3>Artefactos generados</h3>
         <ul>
-          <li><code>artifacts/kb.sqlite</code> - metadata + chunks</li>
-          <li><code>artifacts/vectors.npy</code> - embeddings</li>
-          <li><code>artifacts/manifest.json</code> - chunk IDs, provider</li>
+          <li><strong>Retrieval h&iacute;brido en capas:</strong> SQL estructurado + vector search + fallback keyword LIKE.</li>
+          <li><strong>MCP tools especializadas:</strong> routing por tipo de pregunta (order lookup vs b&uacute;squeda sem&aacute;ntica).</li>
+          <li><strong>Citas trazables:</strong> chunk_id, file_path, page en cada resultado.</li>
+          <li><strong>Separaci&oacute;n ingest/runtime:</strong> el agente no recibe PDFs crudos, solo snippets indexados.</li>
         </ul>
       </div>
     </div>
+
+    <h3>Stack t&eacute;cnico</h3>
+    <div class="grid-2" style="margin-top:0.5rem;">
+      <div>
+        <ul>
+          <li>Python 3.11</li>
+          <li>PyMuPDF - extracci&oacute;n PDF</li>
+          <li>pytesseract + Pillow - OCR</li>
+          <li>OpenAI API / sentence-transformers - embeddings</li>
+        </ul>
+      </div>
+      <div>
+        <ul>
+          <li>SQLite - metadata relacional</li>
+          <li>NumPy - almacenamiento y b&uacute;squeda vectorial in-memory</li>
+          <li>MCP SDK (FastMCP) - servidor stdio para Cursor</li>
+          <li>python-dotenv - configuraci&oacute;n local</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Artefactos generados (<code>artifacts/</code>)</h3>
+    <ul>
+      <li><code>kb.sqlite</code> - documentos, chunks, metadata, &iacute;ndices SQL por order_id y doc_type</li>
+      <li><code>vectors.npy</code> - matriz de embeddings (proveedor registrado en manifest)</li>
+      <li><code>manifest.json</code> - chunk_ids, conteos, dimensiones, embedding_provider (openai | local)</li>
+    </ul>
   </section>
 
   <section>
