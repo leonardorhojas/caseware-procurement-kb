@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Caseware Take-Home — Resumen de la solución</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #1a2332;
+      --muted: #5a6578;
+      --accent: #0d4f8b;
+      --accent-light: #e8f2fc;
+      --border: #dde3ec;
+      --ok: #0f7b4a;
+      --ok-bg: #e8f7ef;
+      --warn: #9a6700;
+      --warn-bg: #fff8e6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    header {
+      background: linear-gradient(135deg, #0d4f8b 0%, #1a6bb5 100%);
+      color: #fff;
+      padding: 2.5rem 1.5rem;
+    }
+    header h1 { margin: 0 0 0.5rem; font-size: 1.85rem; font-weight: 700; }
+    header p { margin: 0; opacity: 0.92; max-width: 720px; }
+    header a { color: #b8dcff; }
+    .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    h2 {
+      margin: 0 0 1rem;
+      font-size: 1.25rem;
+      color: var(--accent);
+      border-bottom: 2px solid var(--accent-light);
+      padding-bottom: 0.5rem;
+    }
+    h3 { margin: 1.25rem 0 0.5rem; font-size: 1rem; color: var(--text); }
+    p, li { color: var(--text); }
+    .muted { color: var(--muted); font-size: 0.95rem; }
+    ol.steps { padding-left: 1.25rem; }
+    ol.steps li { margin-bottom: 0.75rem; }
+    ol.steps strong { color: var(--accent); }
+    code {
+      background: #eef2f7;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      margin: 0.75rem 0;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.55rem 0.75rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .badge-ok { background: var(--ok-bg); color: var(--ok); }
+    .badge-warn { background: var(--warn-bg); color: var(--warn); }
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin: 1rem 0;
+    }
+    .flow-box {
+      background: var(--accent-light);
+      border: 1px solid #c5daf0;
+      border-radius: 8px;
+      padding: 0.5rem 0.85rem;
+      font-size: 0.88rem;
+      font-weight: 500;
+    }
+    .flow-arrow { color: var(--muted); font-weight: bold; }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 700px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+    .checklist li { margin-bottom: 0.4rem; }
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container" style="padding-top:0;padding-bottom:0;">
+    <h1>Caseware Senior AI Data — Take-Home</h1>
+    <p>Resumen de la solución: pipeline local, RAG híbrido y servidor MCP para consultas sobre procurement e inventario con respuestas citadas.</p>
+    <p style="margin-top:0.75rem;">
+      <strong>Repositorio:</strong>
+      <a href="https://github.com/leonardorhojas/caseware-procurement-kb" target="_blank" rel="noopener">
+        github.com/leonardorhojas/caseware-procurement-kb
+      </a>
+    </p>
+  </div>
+</header>
+
+<div class="container">
+
+  <section>
+    <h2>1. Qué pedía la prueba</h2>
+    <p>Caseware solicitó una plataforma local que permita a un agente AI (vía MCP) consultar una base de conocimiento con:</p>
+    <ul>
+      <li>Facturas, órdenes de compra, envíos, reportes de inventario y contratos</li>
+      <li>PDFs e imágenes (con extracción/OCR pragmática)</li>
+      <li>Respuestas fundamentadas con referencias a fuentes</li>
+      <li>Matching cross-document entre registros relacionados</li>
+    </ul>
+    <p class="muted">Sin cloud, sin frontend, sin over-engineering — pipeline reproducible + MCP funcional en 3–5 horas.</p>
+  </section>
+
+  <section>
+    <h2>2. Pasos para ejecutar la solución</h2>
+    <ol class="steps">
+      <li><strong>Setup</strong> — Python 3.11+, venv, <code>pip install -e .</code>, opcional <code>.env</code> con <code>OPENAI_API_KEY</code>.</li>
+      <li><strong>Ingest (offline)</strong> — <code>python scripts/ingest.py</code> escanea <code>data/</code>, extrae texto, genera chunks, embeddings e índice en <code>artifacts/</code>.</li>
+      <li><strong>MCP</strong> — Conectar <code>caseware-kb</code> en Cursor (config en <code>.cursor/mcp.json</code>). El servidor lee el índice ya procesado; no re-extrae PDFs en runtime.</li>
+      <li><strong>Consultas</strong> — Preguntas en lenguaje natural en Cursor; el agente invoca tools MCP y devuelve respuestas con citas.</li>
+    </ol>
+    <pre>cd CASEWARE
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e .
+cp .env.example .env   # opcional
+python scripts/ingest.py
+# Conectar MCP caseware-kb en Cursor y preguntar en el chat</pre>
+    <p><span class="badge badge-warn">Opcional</span> <code>brew install tesseract</code> + re-ingest para indexar 5 facturas JPG vía OCR.</p>
+  </section>
+
+  <section>
+    <h2>3. Arquitectura implementada</h2>
+    <div class="flow">
+      <span class="flow-box">data/ PDFs + JPGs</span>
+      <span class="flow-arrow">?</span>
+      <span class="flow-box">extract.py</span>
+      <span class="flow-arrow">?</span>
+      <span class="flow-box">chunk.py</span>
+      <span class="flow-arrow">?</span>
+      <span class="flow-box">embed.py</span>
+      <span class="flow-arrow">?</span>
+      <span class="flow-box">store.py</span>
+      <span class="flow-arrow">?</span>
+      <span class="flow-box">artifacts/</span>
+    </div>
+    <div class="flow">
+      <span class="flow-box">artifacts/</span>
+      <span class="flow-arrow">?</span>
+      <span class="flow-box">KnowledgeBase.load()</span>
+      <span class="flow-arrow">?</span>
+      <span class="flow-box">MCP tools</span>
+      <span class="flow-arrow">?</span>
+      <span class="flow-box">Cursor / agente AI</span>
+    </div>
+    <div class="grid-2" style="margin-top:1rem;">
+      <div>
+        <h3>Stack</h3>
+        <ul>
+          <li>Python 3.11, PyMuPDF, pytesseract</li>
+          <li>Embeddings: OpenAI (fallback local MiniLM)</li>
+          <li>SQLite + numpy (vectores en memoria al cargar)</li>
+          <li>MCP SDK (FastMCP, stdio)</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Artefactos generados</h3>
+        <ul>
+          <li><code>artifacts/kb.sqlite</code> — metadata + chunks</li>
+          <li><code>artifacts/vectors.npy</code> — embeddings</li>
+          <li><code>artifacts/manifest.json</code> — chunk IDs, provider</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. Modelo de datos y retrieval</h2>
+    <table>
+      <thead>
+        <tr><th>Campo</th><th>Origen</th><th>Uso</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>doc_type</code></td><td>Carpeta (invoices, purchase_orders, …)</td><td>Filtros, gap analysis</td></tr>
+        <tr><td><code>order_id</code></td><td>Filename o texto "Order ID:"</td><td>Joins cross-document</td></tr>
+        <tr><td><code>period</code></td><td>Filename StockReport_YYYY-MM</td><td>Reportes de inventario</td></tr>
+        <tr><td><code>chunk_id</code>, <code>page</code></td><td>Generados en ingest</td><td>Citas</td></tr>
+      </tbody>
+    </table>
+    <h3>Estrategia de retrieval (3 capas)</h3>
+    <table>
+      <thead>
+        <tr><th>Capa</th><th>Cuándo</th><th>Cómo</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Routing estructurado</td><td>Order ID, gaps, inventario</td><td>SQL en metadata (<code>matching.py</code>)</td></tr>
+        <tr><td>Búsqueda vectorial</td><td>Preguntas semánticas (contrato, conceptos)</td><td>Cosine similarity sobre embeddings</td></tr>
+        <tr><td>Fallback keyword</td><td>Sin hits vectoriales</td><td>SQL <code>LIKE</code> (no BM25)</td></tr>
+      </tbody>
+    </table>
+    <p class="muted"><strong>Mejora futura:</strong> BM25 + FTS5 + fusión RRF con vector search para tokens exactos (Clause 7, SKUs, order IDs en texto libre).</p>
+  </section>
+
+  <section>
+    <h2>5. Tools MCP expuestas</h2>
+    <table>
+      <thead>
+        <tr><th>Tool</th><th>Parámetros</th><th>Retorno</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>search_knowledge_base</code></td>
+          <td><code>query</code>, <code>top_k</code>, <code>doc_type</code>, <code>order_id</code></td>
+          <td>Chunks con score, snippet, file_path, page, chunk_id</td>
+        </tr>
+        <tr>
+          <td><code>get_order_documents</code></td>
+          <td><code>order_id</code></td>
+          <td>Documentos agrupados por tipo (invoice, PO, shipping, …)</td>
+        </tr>
+        <tr>
+          <td><code>find_document_gaps</code></td>
+          <td>—</td>
+          <td>Invoices sin PO, shipping sin invoice, matches completos</td>
+        </tr>
+        <tr>
+          <td><code>list_inventory_reports</code></td>
+          <td>—</td>
+          <td>Periodos y paths de reportes</td>
+        </tr>
+        <tr>
+          <td><code>get_source_excerpt</code></td>
+          <td><code>chunk_id</code></td>
+          <td>Texto ampliado para citar en la respuesta</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>El MCP consume datos indexados; evita devolver PDFs enteros — solo snippets estructurados con referencias.</p>
+  </section>
+
+  <section>
+    <h2>6. Preguntas del reto ? cómo se resolvieron</h2>
+    <table>
+      <thead>
+        <tr><th>Pregunta (PDF)</th><th>Enfoque</th><th>Tool / método</th><th>Resultado validado</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Which documents support order 10687?</td>
+          <td>Join por <code>order_id</code></td>
+          <td><code>get_order_documents</code></td>
+          <td>Invoice + shipping order (2 docs). Sin PO.</td>
+        </tr>
+        <tr>
+          <td>Which invoices are missing a matching purchase order?</td>
+          <td>Set difference invoice IDs vs PO IDs</td>
+          <td><code>find_document_gaps</code></td>
+          <td>10436, 10687, 10839. Full match: 10248, 10382, 10442, 10603, 10711.</td>
+        </tr>
+        <tr>
+          <td>What purchase order supports this invoice?</td>
+          <td>Lookup por order_id del invoice</td>
+          <td><code>get_order_documents</code> + gaps</td>
+          <td>Si no hay PO en el dataset, gaps lo reporta explícitamente.</td>
+        </tr>
+        <tr>
+          <td>Does this shipment match the related invoice?</td>
+          <td>Bundle + comparación de líneas/total en texto indexado</td>
+          <td><code>get_order_documents</code> + contenido chunks</td>
+          <td>Order 10436: match completo, total 2,210.8 en ambos.</td>
+        </tr>
+        <tr>
+          <td>Summarize contract terms relevant to supply of goods</td>
+          <td>RAG semántico sobre contrato TotalEnergies</td>
+          <td><code>search_knowledge_base</code></td>
+          <td>Cláusulas 7, 9, 13, 14 — delivery, warranty, acceptance, remedies.</td>
+        </tr>
+        <tr>
+          <td>Are there mismatches between invoices, POs, and shipping?</td>
+          <td>Análisis de sets por categoría</td>
+          <td><code>find_document_gaps</code></td>
+          <td>Listas de gaps + 5 order IDs fully matched.</td>
+        </tr>
+        <tr>
+          <td>What inventory reports are available, and what period?</td>
+          <td>Metadata <code>period</code> en filename</td>
+          <td><code>list_inventory_reports</code></td>
+          <td>7 reportes: 2016-07 … 2018-01 (cobertura ~trimestral).</td>
+        </tr>
+        <tr>
+          <td>Find evidence related to vendor, order, or item</td>
+          <td>Order: structured; vendor/item: vector + keyword</td>
+          <td><code>get_order_documents</code> / <code>search_knowledge_base</code></td>
+          <td>Parcial — sin extracción dedicada de campos vendor; búsqueda semántica sobre chunks.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>7. Evidencia de demo (MCP en Cursor)</h2>
+    <ul>
+      <li><strong>Order 10687:</strong> invoice_10687.pdf + order_10687.pdf — customer HUNGO, sin PO.</li>
+      <li><strong>Missing POs:</strong> 10436, 10687, 10839.</li>
+      <li><strong>Contrato:</strong> chunks del Master Contract TotalEnergies con términos de supply of goods.</li>
+      <li><strong>Inventario:</strong> 7 StockReports indexados por periodo.</li>
+      <li><strong>Match 10436:</strong> mismos productos, cantidades, precios y total 2,210.8.</li>
+    </ul>
+    <p><span class="badge badge-ok">Validado</span> Tools MCP probadas con cliente stdio y sesión live en Cursor (caseware-kb).</p>
+  </section>
+
+  <section>
+    <h2>8. Deliverables del PDF — checklist</h2>
+    <ul class="checklist">
+      <li><span class="badge badge-ok">?</span> Source code repository (GitHub público)</li>
+      <li><span class="badge badge-ok">?</span> README con setup, pipeline, MCP, arquitectura, modeling, retrieval, tools, citas</li>
+      <li><span class="badge badge-ok">?</span> Instrucciones pipeline (<code>scripts/ingest.py</code>)</li>
+      <li><span class="badge badge-ok">?</span> Instrucciones MCP + conexión Cursor</li>
+      <li><span class="badge badge-ok">?</span> Evidencia MCP con cliente compatible</li>
+      <li><span class="badge badge-warn">~</span> OCR JPGs — implementado; requiere Tesseract instalado para indexar 5 imágenes</li>
+      <li><span class="badge badge-warn">~</span> Embeddings OpenAI — fallback local por quota; documentado en README</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>9. Decisiones de diseño y limitaciones</h2>
+    <ul>
+      <li><strong>Simple sobre complejo:</strong> numpy + SQLite en lugar de Chroma/Elastic; suficiente para ~300 chunks.</li>
+      <li><strong>Ingest offline:</strong> MCP rápido al arrancar; reprocesar solo cuando cambia <code>data/</code>.</li>
+      <li><strong>Extracción vs retrieval:</strong> campos clave (order_id, period) en ingest; resto vía chunks + embeddings.</li>
+      <li><strong>Citas:</strong> chunk_id + file_path + page + snippet; <code>get_source_excerpt</code> para profundizar.</li>
+      <li><strong>AI-assisted:</strong> desarrollo con Cursor; validación manual + smoke tests MCP.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>10. Flujo sugerido para presentación (10–15 min)</h2>
+    <ol>
+      <li>Contexto del problema y arquitectura (diagrama ingest ? artifacts ? MCP).</li>
+      <li>Demo live: order 10687 ? missing POs ? contrato ? inventario ? match 10436.</li>
+      <li>Data modeling (<code>order_id</code> joins) vs RAG semántico.</li>
+      <li>Citation strategy y por qué MCP no re-extrae en runtime.</li>
+      <li>Future work: BM25, Tesseract para JPGs, extracción de campos vendor/producto.</li>
+    </ol>
+  </section>
+
+</div>
+
+<footer>
+  Caseware Senior AI Data Take-Home · Rafael Leonardo Rojas Moreno ·
+  <a href="https://github.com/leonardorhojas/caseware-procurement-kb">Repositorio</a>
+</footer>
+
+</body>
+</html>

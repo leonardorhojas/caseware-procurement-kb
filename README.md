@@ -2,6 +2,9 @@
 
 Local RAG pipeline and MCP server for the Caseware Senior AI Data take-home exercise.
 
+**Resumen visual (HTML):** [docs/take-home-summary.html](docs/take-home-summary.html)  
+**Repositorio:** https://github.com/leonardorhojas/caseware-procurement-kb
+
 ## Quick start (how to run)
 
 Run these steps **in order** from the project root:
@@ -199,7 +202,7 @@ flowchart TB
 
 ## Retrieval strategy
 
-The system uses **layered retrieval** ó not a single search engine. Implementation: [`src/caseware_kb/retrieve.py`](src/caseware_kb/retrieve.py).
+The system uses **layered retrieval** ù not a single search engine. Implementation: [`src/caseware_kb/retrieve.py`](src/caseware_kb/retrieve.py).
 
 | Layer | When | How |
 |-------|------|-----|
@@ -223,7 +226,7 @@ The system uses **layered retrieval** ó not a single search engine. Implementati
 **How BM25 works:** BM25 (Best Matching 25) is a probabilistic ranking function for keyword search. For each query term it scores documents higher when:
 
 - the term appears often in the chunk (term frequency), with diminishing returns;
-- the term is rare across the whole corpus (inverse document frequency ó discriminative terms rank higher);
+- the term is rare across the whole corpus (inverse document frequency ù discriminative terms rank higher);
 - shorter chunks are not unfairly boosted (length normalization).
 
 A typical upgrade path for this project:
