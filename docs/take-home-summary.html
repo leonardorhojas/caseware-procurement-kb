@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Caseware Take-Home — Resumen de la solución</title>
+  <title>Caseware Take-Home - Resumen de la solucion</title>
   <style>
     :root {
       --bg: #f6f8fb;
@@ -130,8 +130,8 @@
 
 <header>
   <div class="container" style="padding-top:0;padding-bottom:0;">
-    <h1>Caseware Senior AI Data — Take-Home</h1>
-    <p>Resumen de la solución: pipeline local, RAG híbrido y servidor MCP para consultas sobre procurement e inventario con respuestas citadas.</p>
+    <h1>Caseware Senior AI Data - Take-Home</h1>
+    <p>Resumen de la soluci&oacute;n: pipeline local, RAG h&iacute;brido y servidor MCP para consultas sobre procurement e inventario con respuestas citadas.</p>
     <p style="margin-top:0.75rem;">
       <strong>Repositorio:</strong>
       <a href="https://github.com/leonardorhojas/caseware-procurement-kb" target="_blank" rel="noopener">
@@ -144,24 +144,24 @@
 <div class="container">
 
   <section>
-    <h2>1. Qué pedía la prueba</h2>
-    <p>Caseware solicitó una plataforma local que permita a un agente AI (vía MCP) consultar una base de conocimiento con:</p>
+    <h2>1. Qu&eacute; ped&iacute;a la prueba</h2>
+    <p>Caseware solicit&oacute; una plataforma local que permita a un agente AI (v&iacute;a MCP) consultar una base de conocimiento con:</p>
     <ul>
-      <li>Facturas, órdenes de compra, envíos, reportes de inventario y contratos</li>
-      <li>PDFs e imágenes (con extracción/OCR pragmática)</li>
+      <li>Facturas, &oacute;rdenes de compra, env&iacute;os, reportes de inventario y contratos</li>
+      <li>PDFs e im&aacute;genes (con extracci&oacute;n/OCR pragm&aacute;tica)</li>
       <li>Respuestas fundamentadas con referencias a fuentes</li>
       <li>Matching cross-document entre registros relacionados</li>
     </ul>
-    <p class="muted">Sin cloud, sin frontend, sin over-engineering — pipeline reproducible + MCP funcional en 3–5 horas.</p>
+    <p class="muted">Sin cloud, sin frontend, sin over-engineering: pipeline reproducible + MCP funcional en 3-5 horas.</p>
   </section>
 
   <section>
-    <h2>2. Pasos para ejecutar la solución</h2>
+    <h2>2. Pasos para ejecutar la soluci&oacute;n</h2>
     <ol class="steps">
-      <li><strong>Setup</strong> — Python 3.11+, venv, <code>pip install -e .</code>, opcional <code>.env</code> con <code>OPENAI_API_KEY</code>.</li>
-      <li><strong>Ingest (offline)</strong> — <code>python scripts/ingest.py</code> escanea <code>data/</code>, extrae texto, genera chunks, embeddings e índice en <code>artifacts/</code>.</li>
-      <li><strong>MCP</strong> — Conectar <code>caseware-kb</code> en Cursor (config en <code>.cursor/mcp.json</code>). El servidor lee el índice ya procesado; no re-extrae PDFs en runtime.</li>
-      <li><strong>Consultas</strong> — Preguntas en lenguaje natural en Cursor; el agente invoca tools MCP y devuelve respuestas con citas.</li>
+      <li><strong>Setup</strong> - Python 3.11+, venv, <code>pip install -e .</code>, opcional <code>.env</code> con <code>OPENAI_API_KEY</code>.</li>
+      <li><strong>Ingest (offline)</strong> - <code>python scripts/ingest.py</code> escanea <code>data/</code>, extrae texto, genera chunks, embeddings e &iacute;ndice en <code>artifacts/</code>.</li>
+      <li><strong>MCP</strong> - Conectar <code>caseware-kb</code> en Cursor (config en <code>.cursor/mcp.json</code>). El servidor lee el &iacute;ndice ya procesado; no re-extrae PDFs en runtime.</li>
+      <li><strong>Consultas</strong> - Preguntas en lenguaje natural en Cursor; el agente invoca tools MCP y devuelve respuestas con citas.</li>
     </ol>
     <pre>cd CASEWARE
 python3 -m venv .venv && source .venv/bin/activate
@@ -169,31 +169,31 @@ pip install -e .
 cp .env.example .env   # opcional
 python scripts/ingest.py
 # Conectar MCP caseware-kb en Cursor y preguntar en el chat</pre>
-    <p><span class="badge badge-warn">Opcional</span> <code>brew install tesseract</code> + re-ingest para indexar 5 facturas JPG vía OCR.</p>
+    <p><span class="badge badge-warn">Opcional</span> <code>brew install tesseract</code> + re-ingest para indexar 5 facturas JPG v&iacute;a OCR.</p>
   </section>
 
   <section>
     <h2>3. Arquitectura implementada</h2>
     <div class="flow">
       <span class="flow-box">data/ PDFs + JPGs</span>
-      <span class="flow-arrow">?</span>
+      <span class="flow-arrow">&rarr;</span>
       <span class="flow-box">extract.py</span>
-      <span class="flow-arrow">?</span>
+      <span class="flow-arrow">&rarr;</span>
       <span class="flow-box">chunk.py</span>
-      <span class="flow-arrow">?</span>
+      <span class="flow-arrow">&rarr;</span>
       <span class="flow-box">embed.py</span>
-      <span class="flow-arrow">?</span>
+      <span class="flow-arrow">&rarr;</span>
       <span class="flow-box">store.py</span>
-      <span class="flow-arrow">?</span>
+      <span class="flow-arrow">&rarr;</span>
       <span class="flow-box">artifacts/</span>
     </div>
     <div class="flow">
       <span class="flow-box">artifacts/</span>
-      <span class="flow-arrow">?</span>
+      <span class="flow-arrow">&rarr;</span>
       <span class="flow-box">KnowledgeBase.load()</span>
-      <span class="flow-arrow">?</span>
+      <span class="flow-arrow">&rarr;</span>
       <span class="flow-box">MCP tools</span>
-      <span class="flow-arrow">?</span>
+      <span class="flow-arrow">&rarr;</span>
       <span class="flow-box">Cursor / agente AI</span>
     </div>
     <div class="grid-2" style="margin-top:1rem;">
@@ -209,9 +209,9 @@ python scripts/ingest.py
       <div>
         <h3>Artefactos generados</h3>
         <ul>
-          <li><code>artifacts/kb.sqlite</code> — metadata + chunks</li>
-          <li><code>artifacts/vectors.npy</code> — embeddings</li>
-          <li><code>artifacts/manifest.json</code> — chunk IDs, provider</li>
+          <li><code>artifacts/kb.sqlite</code> - metadata + chunks</li>
+          <li><code>artifacts/vectors.npy</code> - embeddings</li>
+          <li><code>artifacts/manifest.json</code> - chunk IDs, provider</li>
         </ul>
       </div>
     </div>
@@ -224,7 +224,7 @@ python scripts/ingest.py
         <tr><th>Campo</th><th>Origen</th><th>Uso</th></tr>
       </thead>
       <tbody>
-        <tr><td><code>doc_type</code></td><td>Carpeta (invoices, purchase_orders, …)</td><td>Filtros, gap analysis</td></tr>
+        <tr><td><code>doc_type</code></td><td>Carpeta (invoices, purchase_orders, ...)</td><td>Filtros, gap analysis</td></tr>
         <tr><td><code>order_id</code></td><td>Filename o texto "Order ID:"</td><td>Joins cross-document</td></tr>
         <tr><td><code>period</code></td><td>Filename StockReport_YYYY-MM</td><td>Reportes de inventario</td></tr>
         <tr><td><code>chunk_id</code>, <code>page</code></td><td>Generados en ingest</td><td>Citas</td></tr>
@@ -233,22 +233,22 @@ python scripts/ingest.py
     <h3>Estrategia de retrieval (3 capas)</h3>
     <table>
       <thead>
-        <tr><th>Capa</th><th>Cuándo</th><th>Cómo</th></tr>
+        <tr><th>Capa</th><th>Cu&aacute;ndo</th><th>C&oacute;mo</th></tr>
       </thead>
       <tbody>
         <tr><td>Routing estructurado</td><td>Order ID, gaps, inventario</td><td>SQL en metadata (<code>matching.py</code>)</td></tr>
-        <tr><td>Búsqueda vectorial</td><td>Preguntas semánticas (contrato, conceptos)</td><td>Cosine similarity sobre embeddings</td></tr>
+        <tr><td>B&uacute;squeda vectorial</td><td>Preguntas sem&aacute;nticas (contrato, conceptos)</td><td>Cosine similarity sobre embeddings</td></tr>
         <tr><td>Fallback keyword</td><td>Sin hits vectoriales</td><td>SQL <code>LIKE</code> (no BM25)</td></tr>
       </tbody>
     </table>
-    <p class="muted"><strong>Mejora futura:</strong> BM25 + FTS5 + fusión RRF con vector search para tokens exactos (Clause 7, SKUs, order IDs en texto libre).</p>
+    <p class="muted"><strong>Mejora futura:</strong> BM25 + FTS5 + fusi&oacute;n RRF con vector search para tokens exactos (Clause 7, SKUs, order IDs en texto libre).</p>
   </section>
 
   <section>
     <h2>5. Tools MCP expuestas</h2>
     <table>
       <thead>
-        <tr><th>Tool</th><th>Parámetros</th><th>Retorno</th></tr>
+        <tr><th>Tool</th><th>Par&aacute;metros</th><th>Retorno</th></tr>
       </thead>
       <tbody>
         <tr>
@@ -259,16 +259,16 @@ python scripts/ingest.py
         <tr>
           <td><code>get_order_documents</code></td>
           <td><code>order_id</code></td>
-          <td>Documentos agrupados por tipo (invoice, PO, shipping, …)</td>
+          <td>Documentos agrupados por tipo (invoice, PO, shipping, ...)</td>
         </tr>
         <tr>
           <td><code>find_document_gaps</code></td>
-          <td>—</td>
+          <td>(ninguno)</td>
           <td>Invoices sin PO, shipping sin invoice, matches completos</td>
         </tr>
         <tr>
           <td><code>list_inventory_reports</code></td>
-          <td>—</td>
+          <td>(ninguno)</td>
           <td>Periodos y paths de reportes</td>
         </tr>
         <tr>
@@ -278,14 +278,14 @@ python scripts/ingest.py
         </tr>
       </tbody>
     </table>
-    <p>El MCP consume datos indexados; evita devolver PDFs enteros — solo snippets estructurados con referencias.</p>
+    <p>El MCP consume datos indexados; evita devolver PDFs enteros - solo snippets estructurados con referencias.</p>
   </section>
 
   <section>
-    <h2>6. Preguntas del reto ? cómo se resolvieron</h2>
+    <h2>6. Preguntas del reto - c&oacute;mo se resolvieron</h2>
     <table>
       <thead>
-        <tr><th>Pregunta (PDF)</th><th>Enfoque</th><th>Tool / método</th><th>Resultado validado</th></tr>
+        <tr><th>Pregunta (PDF)</th><th>Enfoque</th><th>Tool / m&eacute;todo</th><th>Resultado validado</th></tr>
       </thead>
       <tbody>
         <tr>
@@ -304,23 +304,23 @@ python scripts/ingest.py
           <td>What purchase order supports this invoice?</td>
           <td>Lookup por order_id del invoice</td>
           <td><code>get_order_documents</code> + gaps</td>
-          <td>Si no hay PO en el dataset, gaps lo reporta explícitamente.</td>
+          <td>Si no hay PO en el dataset, gaps lo reporta expl&iacute;citamente.</td>
         </tr>
         <tr>
           <td>Does this shipment match the related invoice?</td>
-          <td>Bundle + comparación de líneas/total en texto indexado</td>
+          <td>Bundle + comparaci&oacute;n de l&iacute;neas/total en texto indexado</td>
           <td><code>get_order_documents</code> + contenido chunks</td>
           <td>Order 10436: match completo, total 2,210.8 en ambos.</td>
         </tr>
         <tr>
           <td>Summarize contract terms relevant to supply of goods</td>
-          <td>RAG semántico sobre contrato TotalEnergies</td>
+          <td>RAG sem&aacute;ntico sobre contrato TotalEnergies</td>
           <td><code>search_knowledge_base</code></td>
-          <td>Cláusulas 7, 9, 13, 14 — delivery, warranty, acceptance, remedies.</td>
+          <td>Cl&aacute;usulas 7, 9, 13, 14 - delivery, warranty, acceptance, remedies.</td>
         </tr>
         <tr>
           <td>Are there mismatches between invoices, POs, and shipping?</td>
-          <td>Análisis de sets por categoría</td>
+          <td>An&aacute;lisis de sets por categor&iacute;a</td>
           <td><code>find_document_gaps</code></td>
           <td>Listas de gaps + 5 order IDs fully matched.</td>
         </tr>
@@ -328,13 +328,13 @@ python scripts/ingest.py
           <td>What inventory reports are available, and what period?</td>
           <td>Metadata <code>period</code> en filename</td>
           <td><code>list_inventory_reports</code></td>
-          <td>7 reportes: 2016-07 … 2018-01 (cobertura ~trimestral).</td>
+          <td>7 reportes: 2016-07 a 2018-01 (cobertura ~trimestral).</td>
         </tr>
         <tr>
           <td>Find evidence related to vendor, order, or item</td>
           <td>Order: structured; vendor/item: vector + keyword</td>
           <td><code>get_order_documents</code> / <code>search_knowledge_base</code></td>
-          <td>Parcial — sin extracción dedicada de campos vendor; búsqueda semántica sobre chunks.</td>
+          <td>Parcial - sin extracci&oacute;n dedicada de campos vendor; b&uacute;squeda sem&aacute;ntica sobre chunks.</td>
         </tr>
       </tbody>
     </table>
@@ -343,54 +343,54 @@ python scripts/ingest.py
   <section>
     <h2>7. Evidencia de demo (MCP en Cursor)</h2>
     <ul>
-      <li><strong>Order 10687:</strong> invoice_10687.pdf + order_10687.pdf — customer HUNGO, sin PO.</li>
+      <li><strong>Order 10687:</strong> invoice_10687.pdf + order_10687.pdf - customer HUNGO, sin PO.</li>
       <li><strong>Missing POs:</strong> 10436, 10687, 10839.</li>
-      <li><strong>Contrato:</strong> chunks del Master Contract TotalEnergies con términos de supply of goods.</li>
+      <li><strong>Contrato:</strong> chunks del Master Contract TotalEnergies con t&eacute;rminos de supply of goods.</li>
       <li><strong>Inventario:</strong> 7 StockReports indexados por periodo.</li>
       <li><strong>Match 10436:</strong> mismos productos, cantidades, precios y total 2,210.8.</li>
     </ul>
-    <p><span class="badge badge-ok">Validado</span> Tools MCP probadas con cliente stdio y sesión live en Cursor (caseware-kb).</p>
+    <p><span class="badge badge-ok">Validado</span> Tools MCP probadas con cliente stdio y sesi&oacute;n live en Cursor (caseware-kb).</p>
   </section>
 
   <section>
-    <h2>8. Deliverables del PDF — checklist</h2>
+    <h2>8. Deliverables del PDF - checklist</h2>
     <ul class="checklist">
-      <li><span class="badge badge-ok">?</span> Source code repository (GitHub público)</li>
-      <li><span class="badge badge-ok">?</span> README con setup, pipeline, MCP, arquitectura, modeling, retrieval, tools, citas</li>
-      <li><span class="badge badge-ok">?</span> Instrucciones pipeline (<code>scripts/ingest.py</code>)</li>
-      <li><span class="badge badge-ok">?</span> Instrucciones MCP + conexión Cursor</li>
-      <li><span class="badge badge-ok">?</span> Evidencia MCP con cliente compatible</li>
-      <li><span class="badge badge-warn">~</span> OCR JPGs — implementado; requiere Tesseract instalado para indexar 5 imágenes</li>
-      <li><span class="badge badge-warn">~</span> Embeddings OpenAI — fallback local por quota; documentado en README</li>
+      <li><span class="badge badge-ok">OK</span> Source code repository (GitHub p&uacute;blico)</li>
+      <li><span class="badge badge-ok">OK</span> README con setup, pipeline, MCP, arquitectura, modeling, retrieval, tools, citas</li>
+      <li><span class="badge badge-ok">OK</span> Instrucciones pipeline (<code>scripts/ingest.py</code>)</li>
+      <li><span class="badge badge-ok">OK</span> Instrucciones MCP + conexi&oacute;n Cursor</li>
+      <li><span class="badge badge-ok">OK</span> Evidencia MCP con cliente compatible</li>
+      <li><span class="badge badge-warn">~</span> OCR JPGs - implementado; requiere Tesseract instalado para indexar 5 im&aacute;genes</li>
+      <li><span class="badge badge-warn">~</span> Embeddings OpenAI - fallback local por quota; documentado en README</li>
     </ul>
   </section>
 
   <section>
-    <h2>9. Decisiones de diseño y limitaciones</h2>
+    <h2>9. Decisiones de dise&ntilde;o y limitaciones</h2>
     <ul>
       <li><strong>Simple sobre complejo:</strong> numpy + SQLite en lugar de Chroma/Elastic; suficiente para ~300 chunks.</li>
-      <li><strong>Ingest offline:</strong> MCP rápido al arrancar; reprocesar solo cuando cambia <code>data/</code>.</li>
-      <li><strong>Extracción vs retrieval:</strong> campos clave (order_id, period) en ingest; resto vía chunks + embeddings.</li>
+      <li><strong>Ingest offline:</strong> MCP r&aacute;pido al arrancar; reprocesar solo cuando cambia <code>data/</code>.</li>
+      <li><strong>Extracci&oacute;n vs retrieval:</strong> campos clave (order_id, period) en ingest; resto v&iacute;a chunks + embeddings.</li>
       <li><strong>Citas:</strong> chunk_id + file_path + page + snippet; <code>get_source_excerpt</code> para profundizar.</li>
-      <li><strong>AI-assisted:</strong> desarrollo con Cursor; validación manual + smoke tests MCP.</li>
+      <li><strong>AI-assisted:</strong> desarrollo con Cursor; validaci&oacute;n manual + smoke tests MCP.</li>
     </ul>
   </section>
 
   <section>
-    <h2>10. Flujo sugerido para presentación (10–15 min)</h2>
+    <h2>10. Flujo sugerido para presentaci&oacute;n (10-15 min)</h2>
     <ol>
-      <li>Contexto del problema y arquitectura (diagrama ingest ? artifacts ? MCP).</li>
-      <li>Demo live: order 10687 ? missing POs ? contrato ? inventario ? match 10436.</li>
-      <li>Data modeling (<code>order_id</code> joins) vs RAG semántico.</li>
-      <li>Citation strategy y por qué MCP no re-extrae en runtime.</li>
-      <li>Future work: BM25, Tesseract para JPGs, extracción de campos vendor/producto.</li>
+      <li>Contexto del problema y arquitectura (diagrama ingest -&gt; artifacts -&gt; MCP).</li>
+      <li>Demo live: order 10687 -&gt; missing POs -&gt; contrato -&gt; inventario -&gt; match 10436.</li>
+      <li>Data modeling (<code>order_id</code> joins) vs RAG sem&aacute;ntico.</li>
+      <li>Citation strategy y por qu&eacute; MCP no re-extrae en runtime.</li>
+      <li>Future work: BM25, Tesseract para JPGs, extracci&oacute;n de campos vendor/producto.</li>
     </ol>
   </section>
 
 </div>
 
 <footer>
-  Caseware Senior AI Data Take-Home · Rafael Leonardo Rojas Moreno ·
+  Caseware Senior AI Data Take-Home - Rafael Leonardo Rojas Moreno -
   <a href="https://github.com/leonardorhojas/caseware-procurement-kb">Repositorio</a>
 </footer>
 
