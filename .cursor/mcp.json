@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "caseware-kb": {
+      "command": "/Users/rafael/Projects/CASEWARE/.venv/bin/python",
+      "args": [
+        "/Users/rafael/Projects/CASEWARE/mcp_server/server.py"
+      ],
+      "cwd": "/Users/rafael/Projects/CASEWARE",
+      "env": {
+        "CASEWARE_EMBEDDING_PROVIDER": "local"
+      }
+    }
+  }
+}
